@@ -1,0 +1,14 @@
+Mirrors a directory of darcs repos onto github.
+
+Config description:
+{
+  "user"          : "<username on github>",
+  "SSH_AUTH_SOCK" : "path to ssh-agent socket file, like /tmp/ssh-abcde12345/agent.12345",
+  "gitHubToken"   : "<from https://github.com/account/admin>",
+  "gitsyncDir"    : "<dir to dump the local git mirrors>",
+  "darcsDir"      : "<dir whose subdirs are the darcs repos you want to mirror>",
+  "darcsToGitCmd" : "/usr/bin/darcs-to-git" 
+}
+
+See also:
+http://www.silverwareconsulting.com/index.cfm/2009/10/30/Placing-Config-Files-Under-Version-Control-with-Git-and-GitHub
