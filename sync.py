@@ -10,6 +10,14 @@ class Project(object):
         self.config = config
         self.gh = gh
         self.name = name
+
+    def darcsTime(self):
+        j = os.path.join
+        darcsPriv = j(self.config['darcsDir'], self.name, '_darcs')
+        for n in ['inventory', 'hashed_inventory']:
+            if os.path.exists(j(darcsPriv, n)):
+                return os.path.getmtime(j(darcsPriv, n))
+        raise ValueError("can't find a darcs time")
         
     def gitDir(self):
         gitDir = os.path.join(self.config['gitSyncDir'], self.name)
@@ -56,12 +64,14 @@ config = json.loads(open("config.json").read())
 gh = Github(config['gitHubToken']).get_user()
 
 for proj in os.listdir(config['darcsDir']):
-    if 'repo' not in proj:
-        continue
     if not os.path.isdir(os.path.join(config['darcsDir'], proj)):
         continue
     try:
         p = Project(config, gh, proj)
+
+        if p.darcsTime() < time.time() - 86400*config['tooOldDays']:
+            continue
+        
         log.info("syncing %s" % proj)
         p.syncToLocalGit()
         p.makeGitHubRepo()
