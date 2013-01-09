@@ -1,7 +1,7 @@
 #!bin/python
 
-import os, subprocess, urllib2, jsonlib, logging, traceback
-from github import github
+import os, subprocess, urllib2, json, logging, traceback, time
+from github import Github, GithubException
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger()
 
@@ -26,23 +26,34 @@ class Project(object):
         self.runGitCommand([self.config['darcsToGitCmd'], '--no-verbose', darcsDir])
 
     def runGitCommand(self, args):
-        subprocess.check_call(args, cwd=self.gitDir(),
-                          env={'SSH_AUTH_SOCK': self.config['SSH_AUTH_SOCK']})
+        try:
+            subprocess.check_call(args, cwd=self.gitDir(),
+                                  env={'SSH_AUTH_SOCK': self.config['SSH_AUTH_SOCK'],
+                                       'HOME': os.environ['HOME'], # darcs-to-git uses this
+                                       })
+        except:
+            log.error("in %s" % self.gitDir())
+            raise
 
     def makeGitHubRepo(self):
         try:
-            self.gh.repos.create(self.name)
-        except urllib2.HTTPError:
+            self.gh.create_repo(self.name)
+        except GithubException, e:
+            assert e.data['errors'][0]['message'].startswith('name already exists'), e
             return
         self.runGitCommand(['git', 'remote', 'add', 'origin',
-                            'git@github.com:%s/%s.git' % (self.gh.user,
+                            'git@github.com:%s/%s.git' % (self.gh.login,
                                                           self.name)])
 
     def pushToGitHub(self):
         self.runGitCommand(['git', 'push', 'origin', 'master'])
 
-config = jsonlib.read(open("config.json").read())
-gh = github.GitHub(config['user'], config['gitHubToken'])
+config = json.loads(open("config.json").read())
+
+# to get this token:
+# curl -u drewp https://api.github.com/authorizations -d '{"scopes":["repo"]}'
+# from http://developer.github.com/v3/oauth/#oauth-authorizations-api
+gh = Github(config['gitHubToken']).get_user()
 
 for proj in os.listdir(config['darcsDir']):
     if 'repo' not in proj:
