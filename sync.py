@@ -1,6 +1,6 @@
 #!bin/python
 
-import os, subprocess, urllib2, json, logging, traceback, time
+import os, subprocess, urllib2, json, logging, traceback, time, re
 from github import Github, GithubException
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger()
@@ -31,7 +31,7 @@ class Project(object):
         try:
             os.rmdir(os.path.join(darcsDir, 'darcs_testing_for_nfs'))
         except OSError: pass
-        self.runGitCommand([self.config['darcsToGitCmd'], '--no-verbose', darcsDir])
+        self.runGitCommand([self.config['darcsToGitCmd'], '--verbose', darcsDir])
 
     def runGitCommand(self, args):
         try:
@@ -47,7 +47,7 @@ class Project(object):
         try:
             self.gh.create_repo(self.name)
         except GithubException, e:
-            assert e.data['errors'][0]['message'].startswith('name already exists'), e
+            assert e.data['errors'][0]['message'].startswith('name already exists'), (e, self.name)
             return
         self.runGitCommand(['git', 'remote', 'add', 'origin',
                             'git@github.com:%s/%s.git' % (self.gh.login,
@@ -56,7 +56,18 @@ class Project(object):
     def pushToGitHub(self):
         self.runGitCommand(['git', 'push', 'origin', 'master'])
 
+def getSshAuthSock():
+    keychain = subprocess.check_output([
+        "keychain", "--noask", "--quiet", "--eval", "id_rsa"])
+    m = re.search(r'SSH_AUTH_SOCK=([^; \n]+)', keychain)
+    if m is not None:
+        return m.group(1)
+    else:
+        raise ValueError("couldn't find SSH_AUTH_SOCK in output "
+                         "from keychain: %r" % keychain)
+        
 config = json.loads(open("config.json").read())
+config['SSH_AUTH_SOCK'] = getSshAuthSock()
 
 # to get this token:
 # curl -u drewp https://api.github.com/authorizations -d '{"scopes":["repo"]}'
