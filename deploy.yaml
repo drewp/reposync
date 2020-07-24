@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: reposync
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: reposync
+  template:
+    metadata:
+      labels:
+        app: reposync
+    spec:
+      containers:
+        - name: reposync
+          image: bang5:5000/reposync_image
+          imagePullPolicy: "Always"
+          securityContext: {capabilities: {add: [SYS_PTRACE]}}
+          ports:
+          - containerPort: 10001
+          volumeMounts:
+            - {name: my, mountPath: /my}
+      volumes:
+        - { name: my, persistentVolumeClaim: { claimName: my } }
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: "kubernetes.io/hostname"
+                operator: In
+                values: ["bang"]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: reposync
+spec:
+  ports:
+  - {port: 80, targetPort: 10001, name: http}
+  selector:
+    app: reposync
+
+    

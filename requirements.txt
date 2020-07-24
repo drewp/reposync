@@ -1,0 +1,13 @@
+cffi
+cyclone
+docopt
+prometheus_client==0.7.1
+pyopenssl==19.0.0
+python-dateutil
+requests
+ruamel.yaml
+treq
+twisted[tls]==19.2.1
+tzlocal
+cycloneerr==0.4.0
+standardservice==0.6.0

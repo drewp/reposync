@@ -1,0 +1,6 @@
+[trusted]
+users = drewp
+
+[extensions]
+hgext.bookmarks =
+hggit = /usr/local/lib/python3.8/dist-packages/hggit

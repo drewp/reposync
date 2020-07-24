@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>reposync</title>
+    <style>
+      body {
+        background: #1f1f1f;
+        color: white;
+        font-family: monospace;
+      }
+      th {
+        text-align: left;
+        white-space: nowrap;
+      }
+      td.github {
+        white-space: nowrap;
+        opacity: 0.5;
+      }
+      td.github.on {
+        opacity: 1;
+      }
+      span.check {
+        font-size: 200%;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>repo statuses</h1>
+
+    <script type="module">
+      import Litedom from "https://bigasterisk.com/lib/litedom/0.12.1/litedom.es.js";
+      Litedom({
+        tagName: "bigast-loginbar",
+        template: `<span>{this.responseHtml}</span>`,
+        data: { responseHtml: "..." },
+        async created() {
+          const resp = await fetch("/_loginBar");
+          this.data.responseHtml = await resp.text();
+        },
+      });
+    </script>
+
+    <script type="module">
+      import Litedom from "https://bigasterisk.com/lib/litedom/0.12.1/litedom.es.js";
+      const repos = [{ dir: "dir1", summary: "ok" }];
+      Litedom({
+        tagName: "reposync-top",
+        template: `<div id="top">
+                      <table>
+                       <tr :for="repo in this.repos">
+                        <th>{repo.path}</th>
+                        <td> {repo.status.error || ''}
+                          <span :if="repo.status.changed==0 && repo.status.unknown==0">
+                            clean
+                          </span>
+                          <span :else>
+                            changed {repo.status.changed}, unknown {repo.status.unknown}
+                          </span>
+                        </td>
+                        <td :class="github: true; on: repo.github">
+                          <span class="check" :if="repo.github">☑</span>
+                          <span class="check" :else>☐</span> github
+                          <span :if="repo.github">
+                          <table style="display: inline-block">
+                            <tr><td>github latest</td><td>{repo.githubLatest.t}</td></tr>
+                            <tr><td>home latest</td><td>{repo.hgLatest.t}</td></tr>
+                            </table>
+                          </span>
+                        </td>
+                        </tr>
+                      </table>
+                   </div>`,
+        data: { repos: [] },
+        created() {
+          const statuses = new EventSource("status/events");
+          statuses.addEventListener("message", (ev) => {
+            const update = JSON.parse(ev.data);
+            update.update.repoDir = update.key;
+
+            var found = false;
+            this.data.repos.forEach((r) => {
+              if (r.repoDir == update.key) {
+                found = true;
+                Object.assign(r, update.update);
+              }
+            });
+            if (!found) {
+              this.data.repos.push(update.update);
+              this.data.repos.sort((a, b) => (a.repoDir > b.repoDir ? 1 : -1));
+            }
+          });
+        },
+      });
+    </script>
+
+    <reposync-top></reposync-top>
+    <bigast-loginbar></bigast-loginbar>
+    <pre>
+      repo1 clean                     synced to github   github up to date  [sync now]
+            dirty [msg____] [commit]
+
+      repo1 is a link to my hgserve
+
+      GET /status/events
+
+      GET /recent?repo=/my/dir
+      GET /recent?all
+      GET /recent/events?repo=/my/dir|all
+
+      POST /githubSync?all
+      POST /githubSync?repo=/my/dir
+
+      GET /homepage -> a CE table of all changes using /recent
+    
+      each event are a json message:
+        key: string
+        update: replace the data for that key
+      Here, keys are repo paths.
+    
+    </pre>
+  </body>
+</html>

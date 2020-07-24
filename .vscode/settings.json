@@ -1,0 +1,4 @@
+{
+    "python.pythonPath": "/home/drewp/.venvs/reposync/bin/python",
+    "python.formatting.provider": "yapf"
+}

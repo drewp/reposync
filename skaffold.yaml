@@ -1,0 +1,18 @@
+apiVersion: skaffold/v2beta5
+kind: Config
+metadata:
+  name: reposync
+build:
+  tagPolicy:
+    dateTime:
+      format: "2006-01-02_15-04-05"
+      timezone: "Local"
+  artifacts:
+  - image: bang5:5000/reposync_image
+    sync: # files that could be patched sans python restart
+      infer:
+      - index.html
+deploy:
+  kubectl:
+    manifests:
+    - deploy.yaml

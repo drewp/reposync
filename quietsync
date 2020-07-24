@@ -1,0 +1,11 @@
+#!/bin/zsh
+eval `keychain --quiet --eval id_ecdsa`
+cd `dirname $0`
+bin/python sync.py |& egrep -v "^(Running....(darcs|git)|INFO|Nothing to pull|Comparing final state|Contents match|Everything up)" | egrep -v "will be deprecated" | egrep -v "^$"
+
+for repo (traps blender-addons streamed-graph bigast-front-door rdf_elements webfilter) {
+  cd /my/repo/${repo}/
+  hg up
+  hg bookmark -r default master
+  hg push git+ssh://git@github.com/drewp/${repo}.git --quiet
+}
