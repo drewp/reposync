@@ -29,17 +29,7 @@
   <body>
     <h1>repo statuses</h1>
 
-    <script type="module">
-      import Litedom from "https://bigasterisk.com/lib/litedom/0.12.1/litedom.es.js";
-      Litedom({
-        tagName: "bigast-loginbar",
-        template: `<span>{this.responseHtml}</span>`,
-        data: { responseHtml: "..." },
-        async created() {
-          const resp = await fetch("/_loginBar");
-          this.data.responseHtml = await resp.text();
-        },
-      });
+    <script type="module" src="/loginBar.js">
     </script>
 
     <script type="module">
