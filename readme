@@ -12,3 +12,8 @@ Config description:
 
 See also:
 http://www.silverwareconsulting.com/index.cfm/2009/10/30/Placing-Config-Files-Under-Version-Control-with-Git-and-GitHub
+
+-----
+
+  hg bookmark -r default main
+  hg push git+ssh://git@github.com/drewp/${repo}.git --quiet
