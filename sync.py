@@ -6,10 +6,13 @@ from github import Github, GithubException
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger()
 
-class Project(object):
-    def __init__(self, config, gh, projRoot: Path):
-        self.config = config
-        self.gh = gh
+
+class Project:
+    def __init__(self, projRoot: Path):
+        self.config = json.load(open(Path(__file__).parent / "config.json"))
+        self.config['SSH_AUTH_SOCK'] = getSshAuthSock()
+
+        self.gh = Github(self.config['githubToken']).get_user()
         self.projRoot = projRoot
         self.name = projRoot.name
 
@@ -49,7 +52,6 @@ class Project(object):
         try:
             self.gh.create_repo(self.name)
         except GithubException as e:
-            print('exists')
             assert e.data['errors'][0]['message'].startswith('name already exists'), (e, self.name)
             return
         self.runGitCommand(['git', 'remote', 'add', 'origin',
@@ -78,21 +80,17 @@ def getSshAuthSock():
     return m.group(1)
 
 if __name__ == '__main__':
-    config = json.loads(open("config.json").read())
-    config['SSH_AUTH_SOCK'] = getSshAuthSock()
 
     # to get this token:
     # curl -u drewp https://api.github.com/authorizations -d '{"scopes":["repo"]}'
     # --new:
     # from https://docs.github.com/en/developers/apps/building-oauth-apps/authorizing-oauth-apps#non-web-application-flow -> https://github.com/settings/tokens to make one
 
-    gh = Github(config['gitHubToken']).get_user()
-
     for proj in os.listdir(config['darcsDir']):
         if not os.path.isdir(os.path.join(config['darcsDir'], proj)):
             continue
         try:
-            p = Project(config, gh, proj)
+            p = Project(proj)
 
             if p.darcsTime() < time.time() - 86400*config['tooOldDays']:
                 continue
