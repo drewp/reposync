@@ -64,11 +64,15 @@ class Project:
     def hgToGithub(self):
         subprocess.check_call(['hg', 'bookmark', '-r', 'default', 'main'],
                               cwd=self.projRoot)
-        subprocess.check_call(['hg', 'push',
+        push = subprocess.run(['hg', 'push',
                                f'git+ssh://git@github.com/{self.gh.login}/{self.name}'
                                ],
+                              check=False,
+                              capture_output=True,
                               cwd=self.projRoot,
                               env={'SSH_AUTH_SOCK': self.config['SSH_AUTH_SOCK']})
+        if not push.stdout.endswith(b'no changes found\n'):
+            raise ValueError(f'hg push failed with {push.stdout!r}')
 
 def getSshAuthSock():
     keychain = subprocess.check_output([
