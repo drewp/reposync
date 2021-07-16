@@ -71,7 +71,7 @@ class Project:
                               capture_output=True,
                               cwd=self.projRoot,
                               env={'SSH_AUTH_SOCK': self.config['SSH_AUTH_SOCK']})
-        if not push.stdout.endswith(b'no changes found\n'):
+        if push.returncode != 0 and not push.stdout.endswith(b'no changes found\n'):
             raise ValueError(f'hg push failed with {push.stdout!r}')
 
 def getSshAuthSock():
