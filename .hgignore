@@ -1,2 +1,4 @@
 dot-ssh
+__pycache__
 config.yaml
+config.json
