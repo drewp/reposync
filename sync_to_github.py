@@ -14,5 +14,5 @@ config['SSH_AUTH_SOCK'] = getSshAuthSock()
 gh = Github(config['gitHubToken']).get_user()
 
 p = Project(config, gh, Path('.').absolute())
-p.makeGitHubRepo()
-p.hgToGitHub()
+p.makeGithubRepo()
+p.hgToGithub()

@@ -45,7 +45,7 @@ class Project(object):
             log.error("in %s" % self.gitDir())
             raise
 
-    def makeGitHubRepo(self):
+    def makeGithubRepo(self):
         try:
             self.gh.create_repo(self.name)
         except GithubException as e:
@@ -56,10 +56,10 @@ class Project(object):
                             'git@github.com:%s/%s.git' % (self.gh.login,
                                                           self.name)])
 
-    def pushToGitHub(self):
+    def pushToGithub(self):
         self.runGitCommand(['git', 'push', 'origin', 'master'])
 
-    def hgToGitHub(self):
+    def hgToGithub(self):
         subprocess.check_call(['hg', 'bookmark', '-r', 'default', 'main'],
                               cwd=self.projRoot)
         subprocess.check_call(['hg', 'push',
@@ -99,7 +99,7 @@ if __name__ == '__main__':
 
             log.info("syncing %s", proj)
             p.syncToLocalGit()
-            p.makeGitHubRepo()
-            p.pushToGitHub()
+            p.makeGithubRepo()
+            p.pushToGithub()
         except Exception as e:
             traceback.print_exc()
