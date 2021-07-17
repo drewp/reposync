@@ -12,7 +12,7 @@ class Project:
         self.config = json.load(open(Path(__file__).parent / "config.json"))
         self.config['SSH_AUTH_SOCK'] = getSshAuthSock()
 
-        self.gh = Github(self.config['githubToken']).get_user()
+        self.gh = Github(self.config['githubToken'])
         self.projRoot = projRoot
         self.name = projRoot.name
 
@@ -50,22 +50,20 @@ class Project:
 
     def makeGithubRepo(self):
         try:
-            self.gh.create_repo(self.name)
+            self.gh.get_user().create_repo(self.name)
         except GithubException as e:
             assert e.data['errors'][0]['message'].startswith('name already exists'), (e, self.name)
             return
-        self.runGitCommand(['git', 'remote', 'add', 'origin',
-                            'git@github.com:%s/%s.git' % (self.gh.login,
-                                                          self.name)])
-
+        
     def pushToGithub(self):
         self.runGitCommand(['git', 'push', 'origin', 'master'])
 
     def hgToGithub(self):
         subprocess.check_call(['hg', 'bookmark', '-r', 'default', 'main'],
                               cwd=self.projRoot)
+        repo = self.gh.get_user().get_repo(self.name)
         push = subprocess.run(['hg', 'push',
-                               f'git+ssh://git@github.com/{self.gh.login}/{self.name}'
+                               f'git+ssh://'+repo.ssh_url.replace(':', '/'),
                                ],
                               check=False,
                               capture_output=True,
