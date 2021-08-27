@@ -151,12 +151,7 @@ class Statuses(cyclone.sse.SSEHandler):
         repo = self.toProcess.pop(0)
 
         try:
-            update = {
-                'path': str(repo.path),
-                'github': repo.github,
-                'status': (yield repo.getStatus()),
-                'hgLatest': (yield repo.getLatestHgCommit())
-            }
+            update = {'path': str(repo.path), 'github': repo.github, 'status': (yield repo.getStatus()), 'hgLatest': (yield repo.getLatestHgCommit())}
             if repo.github:
                 update['githubLatest'] = (yield repo.getLatestGithubCommit())
             self.update(str(repo.path), update)

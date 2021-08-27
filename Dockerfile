@@ -2,6 +2,7 @@ FROM bang5:5000/base_x86
 
 WORKDIR /opt
 
+RUN echo 2021-07-22 && apt-get update
 RUN apt-get install -y python3.8 libpython3.8-dev python3-openssl python3-cffi-backend
 RUN python3.8 -m pip install mercurial
 
